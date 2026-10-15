@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "522856047250",
+    "project_id": "clinic-management-be551",
+    "storage_bucket": "clinic-management-be551.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522856047250:android:66161ac6cf62f735ae3c4b",
+        "android_client_info": {
+          "package_name": "com.example.clinic_mangement"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEviTlREkCv9m_LUZGVvPlNg7LjMSSHEg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
