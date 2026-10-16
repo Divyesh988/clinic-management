@@ -746,8 +746,8 @@ class _AddVisitScreenState extends State<AddVisitScreen> {
       debugPrint('Error saving new visit: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save visit encounter: $e'),
+          const SnackBar(
+            content: Text('Failed to save visit encounter. Please check your connection and try again.'),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -867,9 +867,9 @@ class _AddVisitScreenState extends State<AddVisitScreen> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
                       )
-                    : const Icon(Icons.cloud_done_rounded, color: Colors.white),
+                    : const Icon(Icons.check_circle_outline_rounded, color: Colors.white),
                 label: Text(
-                  _isSaving ? 'Recording Encounter to Cloud EHR...' : 'Save & Finalize Consultation',
+                  _isSaving ? 'Recording Encounter...' : 'Save & Finalize Consultation',
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
@@ -1388,7 +1388,7 @@ class _AddVisitScreenState extends State<AddVisitScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            'Live from Firestore • Tap any medicine to prescribe',
+                            'Formulary Catalog • Tap medicine to prescribe',
                             style: TextStyle(fontSize: 10.5, color: AppColors.textSecondary),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1520,7 +1520,7 @@ class _AddVisitScreenState extends State<AddVisitScreen> {
                             SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                'No uploaded medicines found in Firestore.\nGo to Profile > Predefined Medicines to import an Excel file or load starters.',
+                                'No predefined medicines found in formulary.\nGo to Profile > Predefined Medicines to import an Excel file or load starters.',
                                 style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, height: 1.3),
                               ),
                             ),

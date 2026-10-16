@@ -7,15 +7,18 @@ enum DoctorAccountStatus {
   suspended;
 
   static DoctorAccountStatus fromString(String? val) {
-    switch (val?.toLowerCase().trim()) {
+    if (val == null) return DoctorAccountStatus.inactive;
+    switch (val.toLowerCase().trim()) {
       case 'active':
         return DoctorAccountStatus.active;
-      case 'inactive':
-        return DoctorAccountStatus.inactive;
       case 'suspended':
         return DoctorAccountStatus.suspended;
+      case 'inactive':
+      case 'closed':
+        return DoctorAccountStatus.inactive;
       default:
-        return DoctorAccountStatus.active;
+        // A missing, null, or unrecognized status must never be interpreted as active
+        return DoctorAccountStatus.inactive;
     }
   }
 
@@ -41,6 +44,7 @@ class DoctorAccount {
   final String phone;
   final String regNumber;
   final DoctorAccountStatus accountStatus;
+  final String? suspensionReason;
   final bool onboardingCompleted;
   final bool mustChangePassword;
   final String? distributorUid;
@@ -58,6 +62,7 @@ class DoctorAccount {
     this.phone = '',
     this.regNumber = '',
     this.accountStatus = DoctorAccountStatus.active,
+    this.suspensionReason,
     this.onboardingCompleted = false,
     this.mustChangePassword = false,
     this.distributorUid,
@@ -68,6 +73,7 @@ class DoctorAccount {
   });
 
   bool get isActive => accountStatus == DoctorAccountStatus.active;
+  bool get isSuspended => accountStatus == DoctorAccountStatus.suspended;
 
   factory DoctorAccount.fromMap(Map<String, dynamic> data, String uid) {
     DateTime? parseDate(dynamic val) {
@@ -88,6 +94,7 @@ class DoctorAccount {
       phone: data['phone']?.toString() ?? '',
       regNumber: data['regNumber']?.toString() ?? '',
       accountStatus: DoctorAccountStatus.fromString(data['accountStatus']?.toString()),
+      suspensionReason: data['suspensionReason']?.toString(),
       onboardingCompleted: data['onboardingCompleted'] == true ||
           data['setupCompleted'] == true,
       mustChangePassword: data['mustChangePassword'] == true,
@@ -109,6 +116,7 @@ class DoctorAccount {
       'phone': phone,
       'regNumber': regNumber,
       'accountStatus': accountStatus.name,
+      if (suspensionReason != null) 'suspensionReason': suspensionReason,
       'onboardingCompleted': onboardingCompleted,
       'mustChangePassword': mustChangePassword,
       'distributorUid': distributorUid,

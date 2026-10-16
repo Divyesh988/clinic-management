@@ -125,10 +125,10 @@ class _patientsState extends State<patients> {
       'age': (raw['age'] as num?)?.toInt() ?? 30,
       'gender': raw['gender']?.toString() ?? 'Other',
       'phone': raw['phone']?.toString() ?? '+91 00000 00000',
-      'address': raw['address']?.toString() ?? 'Gujarat, India',
+      'address': raw['address']?.toString() ?? '',
       'email': raw['email']?.toString() ?? '',
       'bloodGroup': raw['bloodGroup']?.toString() ?? 'B+',
-      'clinic': raw['clinic']?.toString() ?? 'Sunrise Clinic',
+      'clinic': raw['clinic']?.toString() ?? 'Primary Clinic',
       'clinicId': raw['clinicId']?.toString() ?? '',
       'clinicAddress': raw['clinicAddress']?.toString() ?? '',
       'lastVisit': raw['lastVisit']?.toString() ?? 'Recent',
@@ -580,7 +580,7 @@ class _patientsState extends State<patients> {
                     style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                   ),
                   const TextSpan(
-                    text: ' from the clinic database? All consultation, prescription, and billing records will be erased.',
+                    text: '? All consultation, prescription, and billing records will be erased.',
                   ),
                 ],
               ),
@@ -671,7 +671,7 @@ class _patientsState extends State<patients> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Are you sure you want to permanently delete $count selected patient record(s) from Cloud Firestore database?',
+              'Are you sure you want to permanently delete $count selected patient record(s)?',
               style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
             ),
             const SizedBox(height: 12),
@@ -765,8 +765,8 @@ class _patientsState extends State<patients> {
                 Expanded(
                   child: Text(
                     ids.length == 1
-                        ? 'Patient record deleted from database.'
-                        : '${ids.length} patient records deleted from database.',
+                        ? 'Patient record deleted successfully.'
+                        : '${ids.length} patient records deleted successfully.',
                   ),
                 ),
               ],
@@ -786,8 +786,8 @@ class _patientsState extends State<patients> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Record removed locally ($e)'),
+          const SnackBar(
+            content: Text('Record removed locally. Changes will synchronize automatically.'),
             backgroundColor: AppColors.warning,
             behavior: SnackBarBehavior.floating,
           ),
@@ -1250,7 +1250,7 @@ class _patientsState extends State<patients> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      _isCloudConnected ? 'Cloud Live' : 'Offline',
+                      _isCloudConnected ? 'Connected' : 'Offline',
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
@@ -1277,7 +1277,7 @@ class _patientsState extends State<patients> {
               ),
               IconButton(
                 onPressed: fetchpatient,
-                tooltip: 'Sync from Firebase',
+                tooltip: 'Refresh Records',
                 visualDensity: VisualDensity.compact,
                 icon: _isLoading
                     ? const SizedBox(
@@ -2859,7 +2859,7 @@ class _patientsState extends State<patients> {
                       _buildDetailTile(
                         icon: Icons.location_on_outlined,
                         title: 'Residential Address',
-                        value: patient['address']?.toString() ?? 'Ahmedabad, Gujarat',
+                        value: (patient['address']?.toString() ?? '').isNotEmpty ? patient['address'].toString() : 'Not provided',
                       ),
                       const SizedBox(height: 10),
                       Row(
@@ -2868,7 +2868,7 @@ class _patientsState extends State<patients> {
                             child: _buildDetailTile(
                               icon: Icons.local_hospital_outlined,
                               title: 'Clinic Branch',
-                              value: patient['clinic']?.toString() ?? 'Sunrise Clinic',
+                              value: patient['clinic']?.toString() ?? 'Primary Clinic',
                             ),
                           ),
                           if ((patient['clinicAddress']?.toString() ?? '').isNotEmpty) ...[
@@ -3352,7 +3352,7 @@ class _patientsState extends State<patients> {
                             ),
                             SizedBox(height: 2),
                             Text(
-                              'Invoice will be recorded under Sunrise Clinic',
+                              'Invoice will be recorded in clinic billing ledger',
                               style: TextStyle(
                                 fontSize: 11.5,
                                 color: AppColors.textSecondary,

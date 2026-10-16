@@ -4,6 +4,8 @@ import '../services/auth_service.dart';
 import '../services/clinic_service.dart';
 import '../services/setup_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/app_logo.dart';
+import 'account_suspended_screen.dart';
 import 'change_password_screen.dart';
 import 'setup_wizard_screen.dart';
 
@@ -116,6 +118,13 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
         _errorMessage = e.message;
         _isLoading = false;
       });
+      if (e.message.toLowerCase().contains('suspended')) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => AccountSuspendedScreen(reason: e.message),
+          ),
+        );
+      }
     } catch (e) {
       setState(() {
         _errorMessage = 'An unexpected sign in error occurred: $e';
@@ -167,7 +176,7 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Registered Doctor Email',
-                    hintText: 'doctor@sunriseclinic.com',
+                    hintText: 'doctor@clinic.com',
                     prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primary, size: 20),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -468,7 +477,7 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
             keyboardType: TextInputType.emailAddress,
             autocorrect: false,
             decoration: InputDecoration(
-              hintText: 'dr.rajivmehta@sunriseclinic.com',
+              hintText: 'doctor@clinic.com',
               prefixIcon: const Icon(Icons.alternate_email_rounded, color: AppColors.primary, size: 19),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -613,26 +622,7 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF14B8A6), Color(0xFF0F766E)],
-            ),
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primaryAccent.withValues(alpha: 0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: const Center(
-            child: Icon(Icons.local_hospital_rounded, color: Colors.white, size: 22),
-          ),
-        ),
+        const AppLogo(size: 40),
         const SizedBox(width: 10),
         Row(
           children: [

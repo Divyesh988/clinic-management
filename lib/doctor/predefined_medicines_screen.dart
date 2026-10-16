@@ -210,7 +210,7 @@ class _PredefinedMedicinesScreenState extends State<PredefinedMedicinesScreen> {
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Save error: $e'), backgroundColor: AppColors.error),
+                        const SnackBar(content: Text('Failed to save medicine. Please try again.'), backgroundColor: AppColors.error),
                       );
                     }
                   }
@@ -257,7 +257,7 @@ class _PredefinedMedicinesScreenState extends State<PredefinedMedicinesScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Delete failed: $e'), backgroundColor: AppColors.error),
+            const SnackBar(content: Text('Failed to delete medicine. Please try again.'), backgroundColor: AppColors.error),
           );
         }
       }
@@ -296,7 +296,7 @@ class _PredefinedMedicinesScreenState extends State<PredefinedMedicinesScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Seed failed: $e'), backgroundColor: AppColors.error),
+          const SnackBar(content: Text('Failed to load starter formulary. Please try again.'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -356,7 +356,7 @@ class _PredefinedMedicinesScreenState extends State<PredefinedMedicinesScreen> {
               children: [
                 const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Successfully imported ${medicines.length} medicines into Firebase!')),
+                Expanded(child: Text('Successfully imported ${medicines.length} medicines into formulary!')),
               ],
             ),
             backgroundColor: AppColors.primary,
@@ -367,7 +367,7 @@ class _PredefinedMedicinesScreenState extends State<PredefinedMedicinesScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bulk import failed: $e'), backgroundColor: AppColors.error),
+          const SnackBar(content: Text('Bulk import failed. Please check the file format and try again.'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -1084,7 +1084,7 @@ class BulkImportSheetState extends State<BulkImportSheet> with SingleTickerProvi
                       ),
                       const SizedBox(height: 3),
                       const Text(
-                        'Excel spreadsheet (.xlsx) or CSV import into Firebase',
+                        'Excel spreadsheet (.xlsx) or CSV import into formulary',
                         style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
                       ),
                     ],
@@ -1105,7 +1105,7 @@ class BulkImportSheetState extends State<BulkImportSheet> with SingleTickerProvi
                           ),
                           SizedBox(height: 2),
                           Text(
-                            'Excel spreadsheet (.xlsx) or CSV import into Firebase',
+                            'Excel spreadsheet (.xlsx) or CSV import into formulary',
                             style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1342,9 +1342,9 @@ class BulkImportSheetState extends State<BulkImportSheet> with SingleTickerProvi
         width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: () => widget.onMedicinesImported(_previewMedicines),
-          icon: const Icon(Icons.cloud_upload_rounded, color: Colors.white, size: 18),
+          icon: const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 18),
           label: Text(
-            'Save ${_previewMedicines.length} Medicines to Firebase',
+            'Save ${_previewMedicines.length} Medicines to Formulary',
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13.5),
           ),
           style: ElevatedButton.styleFrom(

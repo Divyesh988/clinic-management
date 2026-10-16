@@ -258,9 +258,9 @@ class _PatientEhrScreenState extends State<PatientEhrScreen> {
     final gender = _patientData['gender']?.toString() ?? '--';
     final blood = _patientData['bloodGroup']?.toString() ?? 'N/A';
     final phone = _patientData['phone']?.toString() ?? 'N/A';
-    final address = _patientData['address']?.toString() ?? 'Ahmedabad, Gujarat';
+    final address = (_patientData['address']?.toString() ?? '').isNotEmpty ? _patientData['address'].toString() : 'Not provided';
     final allergies = _patientData['allergies']?.toString() ?? 'No known drug allergies';
-    final clinic = _patientData['clinic']?.toString() ?? 'Sunrise Clinic';
+    final clinic = _patientData['clinic']?.toString() ?? 'Primary Clinic';
 
     return Container(
       decoration: BoxDecoration(

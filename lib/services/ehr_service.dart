@@ -461,7 +461,7 @@ class EhrService {
           patientName: pData['name']?.toString() ?? 'Patient',
           patientPhone: pData['phone']?.toString() ?? '',
           clinicId: pData['clinicId']?.toString() ?? '',
-          clinicName: pData['clinic']?.toString() ?? 'Sunrise Clinic',
+          clinicName: pData['clinic']?.toString() ?? 'Primary Clinic',
           clinicAddress: pData['clinicAddress']?.toString() ?? '',
           doctorId: doctorId,
           visitNumber: 1,

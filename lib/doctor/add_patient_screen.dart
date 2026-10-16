@@ -32,8 +32,8 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
   final _ageController = TextEditingController();
   final _addressController = TextEditingController();
   final _areaController = TextEditingController();
-  final _cityController = TextEditingController(text: 'Ahmedabad');
-  final _stateController = TextEditingController(text: 'Gujarat');
+  final _cityController = TextEditingController();
+  final _stateController = TextEditingController();
   final _pinCodeController = TextEditingController();
   final _diseaseController = TextEditingController();
   final _diagnosisController = TextEditingController();
@@ -781,10 +781,10 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
       'age': int.tryParse(_ageController.text.trim()) ?? 30,
       'gender': _selectedGender,
       'phone': _mobileController.text.trim(),
-      'address': _addressController.text.trim().isEmpty ? 'Ahmedabad, Gujarat' : _addressController.text.trim(),
+      'address': _addressController.text.trim(),
       'area': _areaController.text.trim(),
-      'city': _cityController.text.trim().isEmpty ? 'Ahmedabad' : _cityController.text.trim(),
-      'state': _stateController.text.trim().isEmpty ? 'Gujarat' : _stateController.text.trim(),
+      'city': _cityController.text.trim(),
+      'state': _stateController.text.trim(),
       'pinCode': _pinCodeController.text.trim(),
       'email': '${name.toLowerCase().replaceAll(' ', '')}@email.com',
       'bloodGroup': _selectedBloodGroup,
@@ -849,9 +849,9 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
           const SnackBar(
             content: Row(
               children: [
-                Icon(Icons.cloud_done_rounded, color: Colors.white, size: 18),
+                Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 18),
                 SizedBox(width: 8),
-                Expanded(child: Text('Patient registered with Visit #1 in Cloud EHR!')),
+                Expanded(child: Text('Patient registered successfully!')),
               ],
             ),
             backgroundColor: AppColors.primary,
@@ -860,11 +860,11 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
         );
       }
     } catch (error) {
-      debugPrint('Firestore save error: $error');
+      debugPrint('Patient save error: $error');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Saved locally. Cloud sync pending ($error)'),
+          const SnackBar(
+            content: Text('Saved locally. Records will synchronize automatically.'),
             backgroundColor: AppColors.warning,
             behavior: SnackBarBehavior.floating,
           ),
@@ -950,7 +950,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                       child: _buildTextField(
                         controller: _mobileController,
                         label: 'Mobile Number *',
-                        hint: 'e.g. 98250 12345',
+                        hint: 'e.g. 98765 43210',
                         icon: Icons.phone_android_rounded,
                         keyboardType: TextInputType.phone,
                         validator: (v) => v == null || v.trim().length < 8 ? 'Valid phone required' : null,
@@ -1061,7 +1061,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                       child: _buildTextField(
                         controller: _areaController,
                         label: 'Area / Locality',
-                        hint: 'e.g. Satellite, Navrangpura',
+                        hint: 'e.g. Central District',
                         icon: Icons.holiday_village_outlined,
                       ),
                     ),
@@ -1071,7 +1071,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                       child: _buildTextField(
                         controller: _pinCodeController,
                         label: 'PIN Code',
-                        hint: 'e.g. 380015',
+                        hint: 'e.g. 110001',
                         icon: Icons.pin_drop_outlined,
                         keyboardType: TextInputType.number,
                       ),
@@ -1085,7 +1085,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                       child: _buildTextField(
                         controller: _cityController,
                         label: 'City',
-                        hint: 'e.g. Ahmedabad',
+                        hint: 'e.g. City Name',
                         icon: Icons.location_city_outlined,
                       ),
                     ),
@@ -1507,9 +1507,9 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.cloud_upload_rounded, size: 20, color: Colors.white),
+                      : const Icon(Icons.check_rounded, size: 20, color: Colors.white),
                   label: Text(
-                    _isSaving ? 'Saving to Cloud Database...' : 'Save Patient Record Digitally',
+                    _isSaving ? 'Saving Patient Record...' : 'Save Patient Record',
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
@@ -2412,7 +2412,7 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                       ),
                     ),
                     Text(
-                      'Live from Firestore • Tap any medicine to prescribe',
+                      'Formulary Catalog • Tap medicine to prescribe',
                       style: TextStyle(fontSize: 10.5, color: AppColors.textSecondary),
                     ),
                   ],
@@ -2507,10 +2507,10 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
             stream: FirebaseFirestore.instance.collection('predefined_medicines').snapshots(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return Center(
+                return const Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text('Error loading medicines: ${snapshot.error}', style: const TextStyle(fontSize: 11, color: AppColors.error)),
+                    padding: EdgeInsets.all(12),
+                    child: Text('Unable to load formulary catalog.', style: TextStyle(fontSize: 11, color: AppColors.error)),
                   ),
                 );
               }
@@ -2537,13 +2537,13 @@ class _AddPatientScreenState extends State<AddPatientScreen> {
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
-                      const Icon(Icons.info_outline_rounded, color: AppColors.textSecondary, size: 20),
-                      const SizedBox(width: 10),
+                      Icon(Icons.info_outline_rounded, color: AppColors.textSecondary, size: 20),
+                      SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'No uploaded medicines found in Firestore.\nGo to Profile > Predefined Medicines to import an Excel file or load starters.',
+                          'No predefined medicines found in formulary.\nGo to Profile > Predefined Medicines to import an Excel file or load starters.',
                           style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, height: 1.3),
                         ),
                       ),

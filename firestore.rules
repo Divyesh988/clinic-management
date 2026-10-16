@@ -27,6 +27,16 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == doctorUid;
     }
 
+    function isDoctorActive(doctorUid) {
+      return isDoctor(doctorUid) &&
+        exists(/databases/$(database)/documents/doctors/$(doctorUid)) &&
+        get(/databases/$(database)/documents/doctors/$(doctorUid)).data.accountStatus in ['active', 'ACTIVE'] &&
+        (
+          !exists(/databases/$(database)/documents/customers/$(doctorUid)) ||
+          get(/databases/$(database)/documents/customers/$(doctorUid)).data.accountStatus in ['active', 'ACTIVE']
+        );
+    }
+
     match /adminUsers/{adminUid} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.auth.uid == adminUid;
@@ -119,44 +129,78 @@ service cloud.firestore {
       allow read: if isMasterAdmin() || isDoctor(doctorUid) || (
         isAuthenticated() && resource.data.uid == request.auth.uid
       );
-      allow write: if isMasterAdmin() || isDoctor(doctorUid);
+      // Doctors can only update their profile if active and cannot change privileged SaaS/status fields
+      allow write: if isMasterAdmin() || (
+        isDoctorActive(doctorUid) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'accountStatus', 'distributorUid', 'activePlanId', 'subscriptionStatus', 'uid', 'createdAt'
+        ])
+      );
     }
 
     match /doctor_profile/{profileId} {
-      allow read, write: if true;
+      allow read: if isMasterAdmin() || isDoctor(profileId) || profileId == 'main';
+      allow write: if isMasterAdmin() || (profileId == 'main') || isDoctorActive(profileId);
     }
 
     match /clinics/{clinicId} {
-      allow read: if true;
-      allow create: if isMasterAdmin() || (isAuthenticated() && request.resource.data.doctorId == request.auth.uid) || (
+      allow read: if isMasterAdmin() || (
+        isAuthenticated() && (resource.data.doctorId == null || isDoctorActive(resource.data.doctorId))
+      );
+      allow create: if isMasterAdmin() || (
+        isAuthenticated() && isDoctorActive(request.resource.data.doctorId)
+      ) || (
         isAuthenticated() && (
           request.auth.token.role in ['distributor_admin', 'DISTRIBUTOR_ADMIN'] ||
           exists(/databases/$(database)/documents/distributors/$(request.auth.uid))
         )
       );
-      allow update, delete: if isMasterAdmin() || resource.data.doctorId == null || (
-        isAuthenticated() && resource.data.doctorId == request.auth.uid
+      allow update, delete: if isMasterAdmin() || (
+        isAuthenticated() && isDoctorActive(resource.data.doctorId)
       );
     }
 
     match /predefined_medicines/{medicineId} {
-      allow read, write: if true;
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin() || (
+        isAuthenticated() && isDoctorActive(request.auth.uid)
+      );
     }
 
     match /medicines/{medicineId} {
-      allow read, write: if true;
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin() || (
+        isAuthenticated() && isDoctorActive(request.auth.uid)
+      );
     }
 
     match /patients/{patientId} {
-      allow read: if true;
-      allow create: if request.resource.data.clinicId != null;
-      allow update, delete: if true;
+      allow read: if isMasterAdmin() || (
+        isAuthenticated() && (resource.data.doctorId == null || isDoctorActive(resource.data.doctorId))
+      );
+      allow create: if isMasterAdmin() || (
+        isAuthenticated() &&
+        isDoctorActive(request.resource.data.doctorId) &&
+        request.resource.data.clinicId != null
+      );
+      allow update, delete: if isMasterAdmin() || (
+        isAuthenticated() && isDoctorActive(resource.data.doctorId)
+      );
     }
 
     match /visits/{visitId} {
-      allow read: if true;
-      allow create: if request.resource.data.patientId != null && request.resource.data.clinicId != null;
-      allow update, delete: if true;
+      allow read: if isMasterAdmin() || (
+        isAuthenticated() && (resource.data.doctorId == null || isDoctorActive(resource.data.doctorId))
+      );
+      allow create: if isMasterAdmin() || (
+        isAuthenticated() &&
+        isDoctorActive(request.resource.data.doctorId) &&
+        request.resource.data.patientId != null &&
+        request.resource.data.clinicId != null
+      );
+      allow update, delete: if isMasterAdmin() || (
+        isAuthenticated() && isDoctorActive(resource.data.doctorId)
+      );
     }
   }
 }

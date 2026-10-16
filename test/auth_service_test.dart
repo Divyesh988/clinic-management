@@ -5,13 +5,16 @@ import 'package:clinic_mangement/services/auth_service.dart';
 
 void main() {
   group('DoctorAccountStatus Tests', () {
-    test('DoctorAccountStatus parses correctly from string', () {
+    test('DoctorAccountStatus parses correctly from string with safe inactive fallback', () {
       expect(DoctorAccountStatus.fromString('active'), DoctorAccountStatus.active);
       expect(DoctorAccountStatus.fromString('ACTIVE'), DoctorAccountStatus.active);
       expect(DoctorAccountStatus.fromString('inactive'), DoctorAccountStatus.inactive);
       expect(DoctorAccountStatus.fromString('suspended'), DoctorAccountStatus.suspended);
-      expect(DoctorAccountStatus.fromString('unknown_status'), DoctorAccountStatus.active);
-      expect(DoctorAccountStatus.fromString(null), DoctorAccountStatus.active);
+      expect(DoctorAccountStatus.fromString('SUSPENDED'), DoctorAccountStatus.suspended);
+      expect(DoctorAccountStatus.fromString('closed'), DoctorAccountStatus.inactive);
+      // Safe authorization default: missing or unknown must NEVER default to active
+      expect(DoctorAccountStatus.fromString('unknown_status'), DoctorAccountStatus.inactive);
+      expect(DoctorAccountStatus.fromString(null), DoctorAccountStatus.inactive);
     });
 
     test('DoctorAccountStatus provides correct human-readable labels', () {
@@ -196,5 +199,44 @@ void main() {
       expect(ex2.toString(), 'Account suspended');
     });
   });
+
+  group('Real-Time Account Suspension Model Tests', () {
+    test('DoctorAccount deserializes suspension reason correctly', () {
+      final suspendedMap = {
+        'displayName': 'Dr. Test Suspended',
+        'email': 'suspended@clinic.com',
+        'accountStatus': 'suspended',
+        'suspensionReason': 'Billing non-compliance',
+      };
+
+      final account = DoctorAccount.fromMap(suspendedMap, 'doc_susp_1');
+      expect(account.uid, 'doc_susp_1');
+      expect(account.accountStatus, DoctorAccountStatus.suspended);
+      expect(account.isActive, isFalse);
+      expect(account.isSuspended, isTrue);
+      expect(account.suspensionReason, 'Billing non-compliance');
+    });
+
+    test('DoctorAccount serializes suspension reason when present', () {
+      const account = DoctorAccount(
+        uid: 'doc_susp_2',
+        email: 'susp2@clinic.com',
+        displayName: 'Dr. Suspended 2',
+        accountStatus: DoctorAccountStatus.suspended,
+        suspensionReason: 'Administrative audit pending',
+      );
+
+      final map = account.toMap();
+      expect(map['accountStatus'], 'suspended');
+      expect(map['suspensionReason'], 'Administrative audit pending');
+    });
+
+    test('AuthService notifiers are initialized with valid defaults', () {
+      expect(AuthService.isSuspendedNotifier.value, isFalse);
+      expect(AuthService.isCurrentSessionSuspended, isFalse);
+      expect(AuthService.navigatorKey, isNotNull);
+    });
+  });
 }
+
 

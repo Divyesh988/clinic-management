@@ -77,15 +77,15 @@ class DoctorService {
       } else {
         final initialProfile = {
           'doctorId': _currentDoctorId,
-          'name': 'Dr. Rajiv Mehta',
-          'degree': 'MBBS, MD (Internal Medicine)',
-          'speciality': 'Consultant Physician & Diabetologist',
-          'regNumber': 'GMC-84291',
-          'experience': '14 Years',
-          'phone': '+91 98250 14829',
-          'email': 'dr.rajivmehta@sunriseclinic.com',
-          'clinicName': 'Sunrise Multi-Speciality Clinic',
-          'clinicAddress': '12B, Navrangpura, Opposite Doctor House, Ahmedabad, Gujarat',
+          'name': 'Doctor',
+          'degree': 'MBBS',
+          'speciality': 'Consultant Physician',
+          'regNumber': '',
+          'experience': '',
+          'phone': '',
+          'email': '',
+          'clinicName': 'Main Clinic',
+          'clinicAddress': '',
           'consultationFee': 500.0,
           'workingHours': 'Mon - Sat: 09:00 AM - 01:00 PM, 05:00 PM - 08:30 PM',
           'createdAt': FieldValue.serverTimestamp(),
@@ -129,7 +129,7 @@ class DoctorService {
     }
 
     return _firestore.collection('doctor_profile').doc('main').snapshots().map((snap) {
-      return snap.data() ?? {'doctorId': 'doc_main', 'name': 'Dr. Rajiv Mehta'};
+      return snap.data() ?? {'doctorId': 'doc_main', 'name': 'Doctor'};
     });
   }
 }

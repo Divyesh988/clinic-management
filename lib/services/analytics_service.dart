@@ -611,7 +611,7 @@ class AnalyticsService {
 
       return AreaDistribution(
         area: e.key,
-        city: areaCityMap[e.key] ?? 'Ahmedabad',
+        city: areaCityMap[e.key] ?? 'General Area',
         pinCode: areaPinMap[e.key] ?? '—',
         patientCount: count,
         percentageShare: share,
@@ -1086,7 +1086,7 @@ class AnalyticsService {
       }
     }
     if (city.isEmpty) {
-      city = 'Ahmedabad'; // Default clinic base city
+      city = 'General Area'; // Default clinic base category
     }
 
     // 3. Area extraction

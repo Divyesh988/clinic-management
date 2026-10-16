@@ -90,7 +90,7 @@ class _ClinicFormSheetState extends State<_ClinicFormSheet> {
       if (mounted) {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving clinic: $e'), backgroundColor: AppColors.error),
+          const SnackBar(content: Text('Error saving clinic. Please try again.'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -177,7 +177,7 @@ class _ClinicFormSheetState extends State<_ClinicFormSheet> {
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
                       ),
                       const Text(
-                        'Save practice location in Cloud Firestore',
+                        'Configure practice location details',
                         style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                       ),
                     ],
@@ -199,16 +199,16 @@ class _ClinicFormSheetState extends State<_ClinicFormSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildField('Clinic / Hospital Name *', _nameCtrl, Icons.apartment_rounded,
-                        isRequired: true, hint: 'e.g. Sunrise Multi-Speciality Clinic'),
+                        isRequired: true, hint: 'e.g. City Health Clinic'),
                     const SizedBox(height: 12),
                     _buildField('Full Address *', _addressCtrl, Icons.location_on_outlined,
-                        isRequired: true, maxLines: 2, hint: 'e.g. 12B Navrangpura, Opposite Doctor House, Ahmedabad'),
+                        isRequired: true, maxLines: 2, hint: 'e.g. Medical Arts Building, Suite 201'),
                     const SizedBox(height: 12),
                     Row(
                       children: [
                         Expanded(
                           child: _buildField('Phone Number', _phoneCtrl, Icons.phone_outlined,
-                              keyboardType: TextInputType.phone, hint: '+91 98250 14829'),
+                              keyboardType: TextInputType.phone, hint: '+91 98765 43210'),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -219,7 +219,7 @@ class _ClinicFormSheetState extends State<_ClinicFormSheet> {
                     ),
                     const SizedBox(height: 12),
                     _buildField('Official Email', _emailCtrl, Icons.email_outlined,
-                        keyboardType: TextInputType.emailAddress, hint: 'clinic@sunrise.com'),
+                        keyboardType: TextInputType.emailAddress, hint: 'contact@clinic.com'),
                     const SizedBox(height: 12),
                     _buildField('OPD Working Hours', _hoursCtrl, Icons.access_time_rounded,
                         hint: 'e.g. Mon-Sat: 09:00 AM - 01:00 PM, 05:00 PM - 08:30 PM'),
@@ -272,7 +272,7 @@ class _ClinicFormSheetState extends State<_ClinicFormSheet> {
                         label: Text(
                           _isSaving
                               ? 'Saving Clinic...'
-                              : (isNew ? 'Save Clinic to Database' : 'Update Clinic'),
+                              : (isNew ? 'Save Clinic' : 'Update Clinic'),
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13.5),
                         ),
                         style: ElevatedButton.styleFrom(

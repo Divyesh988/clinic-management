@@ -94,8 +94,8 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       if (!mounted) return;
       setState(() => _isFinalizing = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error finalizing setup: $e'),
+        const SnackBar(
+          content: Text('Error finalizing setup. Please check your connection and try again.'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -158,7 +158,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Successfully imported ${medicines.length} medicines into Firebase!'),
+            content: Text('Successfully imported ${medicines.length} medicines!'),
             backgroundColor: AppColors.primary,
           ),
         );
@@ -167,7 +167,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bulk import error: $e'), backgroundColor: AppColors.error),
+          const SnackBar(content: Text('Bulk import failed. Please check file format and try again.'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -203,7 +203,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Starter clinical medicines loaded into Firebase!'),
+            content: Text('Starter clinical medicines loaded successfully!'),
             backgroundColor: AppColors.primary,
           ),
         );
@@ -212,7 +212,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading starter medicines: $e'), backgroundColor: AppColors.error),
+          const SnackBar(content: Text('Error loading starter medicines. Please try again.'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -235,7 +235,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving preference: $e'), backgroundColor: AppColors.error),
+          const SnackBar(content: Text('Error saving preference. Please try again.'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -285,7 +285,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                     CircularProgressIndicator(color: AppColors.primary),
                     SizedBox(height: 16),
                     Text(
-                      'Checking Firebase setup status...',
+                      'Checking setup status...',
                       style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500),
                     ),
                   ],
@@ -473,7 +473,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                     const SizedBox(height: 4),
                     Text(
                       isDone
-                          ? '$_clinicCount clinic location${_clinicCount > 1 ? 's' : ''} configured in Cloud Firestore'
+                          ? '$_clinicCount clinic location${_clinicCount > 1 ? 's' : ''} configured'
                           : 'Configure at least one clinical branch or practice location.',
                       style: TextStyle(fontSize: 12, color: isDone ? const Color(0xFF047857) : AppColors.textSecondary),
                     ),
@@ -588,7 +588,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                     const SizedBox(height: 4),
                     Text(
                       _medicineCount > 0
-                          ? '$_medicineCount medicine record${_medicineCount > 1 ? 's' : ''} in cloud catalogue'
+                          ? '$_medicineCount medicine record${_medicineCount > 1 ? 's' : ''} in catalogue'
                           : (_manualMedicineConfirmed
                               ? 'Manual medicine entry selected (can import anytime)'
                               : 'Import from Excel/CSV, load starter defaults, or opt for manual entry.'),

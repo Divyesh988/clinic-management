@@ -98,7 +98,7 @@ class _doctor_profileState extends State<doctor_profile> {
               children: [
                 Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
                 SizedBox(width: 8),
-                Expanded(child: Text('Doctor profile updated in Cloud Database!')),
+                Expanded(child: Text('Doctor profile updated successfully!')),
               ],
             ),
             backgroundColor: AppColors.primary,
@@ -110,8 +110,8 @@ class _doctor_profileState extends State<doctor_profile> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update profile: $e'),
+          const SnackBar(
+            content: Text('Failed to update profile. Please try again.'),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -349,7 +349,7 @@ class _doctor_profileState extends State<doctor_profile> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error setting primary clinic: $e'), backgroundColor: AppColors.error),
+          const SnackBar(content: Text('Error setting primary clinic. Please try again.'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -367,7 +367,7 @@ class _doctor_profileState extends State<doctor_profile> {
             Text('Delete Clinic', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
           ],
         ),
-        content: Text('Are you sure you want to delete "$clinicName"?\nPatient records already tagged with this clinic will remain preserved in the database.'),
+        content: Text('Are you sure you want to delete "$clinicName"?\nPatient records already associated with this clinic will remain preserved.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
@@ -376,7 +376,7 @@ class _doctor_profileState extends State<doctor_profile> {
               Navigator.pop(ctx);
               setState(() => _isLoading = true);
               try {
-                await ClinicService.deleteClinic(docId);
+                 await ClinicService.deleteClinic(docId);
                 if (mounted) {
                   setState(() => _isLoading = false);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -387,7 +387,7 @@ class _doctor_profileState extends State<doctor_profile> {
                 if (mounted) {
                   setState(() => _isLoading = false);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to delete clinic: $e'), backgroundColor: AppColors.error),
+                    const SnackBar(content: Text('Failed to delete clinic. Please try again.'), backgroundColor: AppColors.error),
                   );
                 }
               }
@@ -420,10 +420,10 @@ class _doctor_profileState extends State<doctor_profile> {
     setState(() => _isLoading = true);
     try {
       await ClinicService.saveClinic(
-        name: _profileData['clinicName'] ?? 'Sunrise Multi-Speciality Clinic',
-        address: _profileData['clinicAddress'] ?? '12B, Navrangpura, Opposite Doctor House, Ahmedabad, Gujarat',
-        phone: _profileData['phone'] ?? '+91 98250 14829',
-        email: _profileData['email'] ?? 'dr.rajivmehta@sunriseclinic.com',
+        name: _profileData['clinicName'] ?? 'Main Clinic',
+        address: _profileData['clinicAddress'] ?? '',
+        phone: _profileData['phone'] ?? '',
+        email: _profileData['email'] ?? (AuthService.currentUser?.email ?? ''),
         consultationFee: (_profileData['consultationFee'] as num?)?.toDouble() ?? 500.0,
         workingHours: _profileData['workingHours'] ?? 'Mon - Sat: 09:00 AM - 01:00 PM, 05:00 PM - 08:30 PM',
         isPrimary: true,
@@ -431,14 +431,14 @@ class _doctor_profileState extends State<doctor_profile> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Initial clinic location initialized in database!'), backgroundColor: AppColors.primary),
+          const SnackBar(content: Text('Initial clinic location initialized!'), backgroundColor: AppColors.primary),
         );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error initializing clinic: $e'), backgroundColor: AppColors.error),
+          const SnackBar(content: Text('Error initializing clinic. Please try again.'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -491,7 +491,7 @@ class _doctor_profileState extends State<doctor_profile> {
         if (mounted) {
           setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to sign out: $e'), backgroundColor: AppColors.error),
+            const SnackBar(content: Text('Failed to sign out. Please try again.'), backgroundColor: AppColors.error),
           );
         }
       }
@@ -534,7 +534,7 @@ class _doctor_profileState extends State<doctor_profile> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            'Database • Clinic-wise records',
+                            'Clinic-wise records',
                             style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -564,7 +564,7 @@ class _doctor_profileState extends State<doctor_profile> {
             stream: ClinicService.streamDoctorClinics(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
+                return const Center(child: Text('Unable to load clinics.'));
               }
               if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
                 return const Center(
@@ -589,7 +589,7 @@ class _doctor_profileState extends State<doctor_profile> {
                       const Icon(Icons.add_business_outlined, size: 36, color: AppColors.textSecondary),
                       const SizedBox(height: 8),
                       const Text(
-                        'No clinics stored in database yet',
+                        'No clinics added yet',
                         style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                       ),
                       const SizedBox(height: 4),
@@ -928,7 +928,7 @@ class _doctor_profileState extends State<doctor_profile> {
                       children: [
                         Flexible(
                           child: Text(
-                            _profileData['name']?.toString() ?? 'Dr. Rajiv Mehta',
+                            _profileData['name']?.toString() ?? (AuthService.currentAccount?.displayName ?? 'Doctor'),
                             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -963,7 +963,7 @@ class _doctor_profileState extends State<doctor_profile> {
                   const Icon(Icons.local_hospital_outlined, size: 15, color: Color(0xFF14B8A6)),
                   const SizedBox(width: 6),
                   Text(
-                    _profileData['clinicName']?.toString() ?? 'Sunrise Clinic',
+                    _profileData['clinicName']?.toString() ?? 'Primary Clinic',
                     style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white70),
                   ),
                 ],
@@ -1087,7 +1087,7 @@ class _doctor_profileState extends State<doctor_profile> {
                         const Icon(Icons.inventory_2_outlined, size: 16, color: AppColors.primary),
                         const SizedBox(width: 6),
                         Text(
-                          '$count Medicines Available in Cloud',
+                          '$count Medicines Available in Formulary',
                           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                         ),
                       ],
@@ -1166,13 +1166,13 @@ class _doctor_profileState extends State<doctor_profile> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          _buildInfoRow(Icons.local_hospital_outlined, 'Clinic Name', _profileData['clinicName']?.toString() ?? 'Sunrise Clinic'),
+          _buildInfoRow(Icons.local_hospital_outlined, 'Clinic Name', _profileData['clinicName']?.toString() ?? 'Main Clinic'),
           const Divider(height: 16),
-          _buildInfoRow(Icons.location_on_outlined, 'Address', _profileData['clinicAddress']?.toString() ?? 'Ahmedabad, Gujarat'),
+          _buildInfoRow(Icons.location_on_outlined, 'Address', _profileData['clinicAddress']?.toString() ?? 'Not specified'),
           const Divider(height: 16),
-          _buildInfoRow(Icons.phone_outlined, 'Contact Phone', _profileData['phone']?.toString() ?? '+91 98250 14829'),
+          _buildInfoRow(Icons.phone_outlined, 'Contact Phone', _profileData['phone']?.toString() ?? 'Not specified'),
           const Divider(height: 16),
-          _buildInfoRow(Icons.email_outlined, 'Official Email', _profileData['email']?.toString() ?? 'info@sunriseclinic.com'),
+          _buildInfoRow(Icons.email_outlined, 'Official Email', _profileData['email']?.toString() ?? (AuthService.currentUser?.email ?? 'Not specified')),
           const Divider(height: 16),
           _buildInfoRow(Icons.access_time_rounded, 'OPD Hours', _profileData['workingHours']?.toString() ?? '09:00 AM - 08:30 PM'),
         ],

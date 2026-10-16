@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'doctor/account_suspended_screen.dart';
 import 'doctor/change_password_screen.dart';
 import 'doctor/doctor_login_screen.dart';
 import 'doctor/setup_wizard_screen.dart';
@@ -38,7 +39,7 @@ class _SplashScreenState extends State<SplashScreen>
     'Connecting to multi-clinic network...',
     'Syncing centralized patient records...',
     'Preparing schedule & billing ledger...',
-    'Ready. Welcome back, Dr. Rajesh',
+    'Ready. Welcome to your workspace',
   ];
 
   @override
@@ -114,7 +115,10 @@ class _SplashScreenState extends State<SplashScreen>
       // 1. Observe Authentication State & Restore Doctor Account
       final doctorAccount = await AuthService.restoreSession();
 
-      if (doctorAccount == null || !doctorAccount.isActive) {
+      if (AuthService.isCurrentSessionSuspended) {
+        // Authoritatively suspended -> Route immediately to dedicated AccountSuspendedScreen
+        destination = AccountSuspendedScreen(reason: AuthService.suspensionReason);
+      } else if (doctorAccount == null || !doctorAccount.isActive) {
         // Not authenticated -> Route to SaaS Doctor Login Screen
         destination = const DoctorLoginScreen();
       } else if (doctorAccount.mustChangePassword) {
@@ -505,7 +509,7 @@ class _SplashScreenState extends State<SplashScreen>
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
-            'Ahmedabad  •  Surat  •  Rajkot',
+            'Secure  •  Integrated  •  Cloud-Enabled',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 10.5,

@@ -1,30 +1,37 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:clinic_mangement/main.dart';
+import 'package:clinic_mangement/doctor/account_suspended_screen.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('AccountSuspendedScreen displays critical suspension UI elements', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: AccountSuspendedScreen(
+          reason: 'Subscription non-payment',
+        ),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify Title
+    expect(find.text('Account Suspended'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Verify Mandatory Explanatory Message
+    expect(
+      find.text(
+        'Your CliniqCare account has been suspended by the platform administrator. Access to clinical features is currently unavailable. Please contact CliniqCare support or your administrator for assistance.',
+      ),
+      findsOneWidget,
+    );
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify Notice Reason
+    expect(find.text('Notice: Subscription non-payment'), findsOneWidget);
+
+    // Verify Support Contact
+    expect(find.text('support@cliniqcare.com'), findsOneWidget);
+
+    // Verify Action Buttons
+    expect(find.text('Check Status / Refresh'), findsOneWidget);
+    expect(find.text('Sign Out'), findsOneWidget);
+    expect(find.byIcon(Icons.lock_person_rounded), findsOneWidget);
   });
 }
