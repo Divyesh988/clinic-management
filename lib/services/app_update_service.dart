@@ -70,7 +70,9 @@ class AppUpdateService {
     try {
       final info = await PackageInfo.fromPlatform();
       final build = int.tryParse(info.buildNumber) ?? 0;
-      return AppVersion.parse(info.version, build);
+      final ver = AppVersion.parse(info.version, build);
+      debugPrint('[AppUpdateService] Running app detected as: $ver (versionName: ${info.version}, versionCode: ${info.buildNumber})');
+      return ver;
     } catch (e) {
       debugPrint('[AppUpdateService] Failed to retrieve PackageInfo: $e');
       return const AppVersion(major: 1, minor: 0, patch: 0, buildNumber: 1, rawVersion: '1.0.0+1');
@@ -147,6 +149,8 @@ class AppUpdateService {
       } else {
         status = AppUpdateStatus.upToDate;
       }
+
+      debugPrint('[AppUpdateService] Version check evaluated: current=$currentVersion, latest=${config.latestVersion}, min=${config.minimumSupportedVersion}, forceUpdate=${config.forceUpdate} => status=$status');
 
       final result = AppUpdateCheckResult(
         status: status,

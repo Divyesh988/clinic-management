@@ -70,6 +70,7 @@ class _MandatoryUpdateScreenState extends State<MandatoryUpdateScreen> {
       });
 
       await ApkUpdateService.installApk(file);
+      AppUpdateService.clearCache();
     } catch (e) {
       if (!mounted) return;
       setState(() {

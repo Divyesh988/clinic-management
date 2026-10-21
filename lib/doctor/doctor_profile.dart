@@ -883,7 +883,7 @@ class _DoctorProfileState extends State<DoctorProfile> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
               Text(
-                'Doctor Profile & Settings',
+                'Doctor Profile & Setting',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary, letterSpacing: -0.4),
               ),
               Text(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/app_update_config.dart';
 import '../models/app_version.dart';
 import '../services/apk_update_service.dart';
+import '../services/app_update_service.dart';
 import '../theme/app_colors.dart';
 import 'app_logo.dart';
 
@@ -83,6 +84,10 @@ class _OptionalUpdateDialogState extends State<OptionalUpdateDialog> {
       });
 
       await ApkUpdateService.installApk(file);
+      AppUpdateService.clearCache();
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {

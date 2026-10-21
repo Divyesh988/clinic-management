@@ -52,7 +52,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       if (AuthService.isAuthenticated) {
         AuthService.revalidateActiveSession(forceServer: true);
       }
-      AppUpdateService.checkForUpdates();
+      AppUpdateService.checkForUpdates(forceRefresh: true);
     }
   }
 
