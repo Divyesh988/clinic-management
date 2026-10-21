@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../models/app_update_config.dart';
 import '../models/app_version.dart';
+import '../widgets/update_dialog.dart';
 
 /// Enumeration of all possible app update check states.
 enum AppUpdateStatus {
@@ -137,15 +138,27 @@ class AppUpdateService {
         return result;
       }
 
-      // Version evaluation logic
+      // Version evaluation logic:
+      // An update is available if:
+      // 1. Android build number / versionCode is newer: config.latestVersion.buildNumber > currentVersion.buildNumber
+      // 2. OR Semantic version is newer: currentVersion < config.latestVersion
+      final bool hasNewerBuild = config.latestVersion.buildNumber > currentVersion.buildNumber;
+      final bool hasNewerSemver = currentVersion < config.latestVersion;
+      final bool isUpdateAvailable = hasNewerBuild || hasNewerSemver;
+
+      final bool isBelowMinBuild = config.minimumSupportedVersion.buildNumber > 0 &&
+          currentVersion.buildNumber < config.minimumSupportedVersion.buildNumber;
+      final bool isBelowMinSemver = currentVersion < config.minimumSupportedVersion;
+      final bool isMandatory = (isBelowMinBuild || isBelowMinSemver) ||
+          (config.forceUpdate && isUpdateAvailable);
+
       final AppUpdateStatus status;
-      if (currentVersion < config.minimumSupportedVersion ||
-          (config.forceUpdate && currentVersion < config.latestVersion)) {
-        status = AppUpdateStatus.mandatoryUpdateRequired;
-      } else if (currentVersion < config.latestVersion) {
-        status = AppUpdateStatus.optionalUpdateAvailable;
-      } else {
+      if (!isUpdateAvailable) {
         status = AppUpdateStatus.upToDate;
+      } else if (isMandatory) {
+        status = AppUpdateStatus.mandatoryUpdateRequired;
+      } else {
+        status = AppUpdateStatus.optionalUpdateAvailable;
       }
 
       final result = AppUpdateCheckResult(
@@ -191,6 +204,39 @@ class AppUpdateService {
     _cachedResult = result;
     _lastFetchTime = DateTime.now();
     updateResultNotifier.value = result;
+  }
+
+  /// Session guard to ensure we prompt the doctor at most once per session.
+  static bool _hasPromptedOptionalDialog = false;
+
+  /// Resets the prompted state for manual checks (e.g. from Profile or Settings).
+  static void resetPromptedState() {
+    _hasPromptedOptionalDialog = false;
+  }
+
+  /// Presents the optional update dialog if an update is available and hasn't yet
+  /// been prompted in this session.
+  static void showOptionalDialogIfAvailable(BuildContext? context) {
+    if (_hasPromptedOptionalDialog) return;
+    final result = updateResultNotifier.value;
+    if (result == null ||
+        result.status != AppUpdateStatus.optionalUpdateAvailable ||
+        result.config == null) {
+      return;
+    }
+
+    if (context == null || !context.mounted) return;
+
+    _hasPromptedOptionalDialog = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        OptionalUpdateDialog.show(
+          context,
+          currentVersion: result.currentVersion,
+          config: result.config!,
+        );
+      }
+    });
   }
 
   /// Clears cache for manual retry.

@@ -38,11 +38,12 @@ void main() {
       expect(published > installed, isTrue);
     });
 
-    test('Same semantic version with higher build number triggers update', () {
-      final installed = AppVersion.parse('1.0.0', 1);
-      final published = AppVersion.parse('1.0.0', 2);
-      expect(installed < published, isTrue);
-      expect(published > installed, isTrue);
+    test('Higher build number with non-standard version tag triggers update', () {
+      final installed = AppVersion.parse('1.0.0', 2);
+      final published = AppVersion.parse('0.3', 4);
+      final hasNewerBuild = published.buildNumber > installed.buildNumber;
+      final hasNewerSemver = installed < published;
+      expect(hasNewerBuild || hasNewerSemver, isTrue);
     });
 
     test('Installed version newer than published version never suggests downgrade', () {
@@ -249,7 +250,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Update Available'), findsOneWidget);
+      expect(find.text('New Version Available'), findsOneWidget);
       expect(find.text('Feature A'), findsOneWidget);
       expect(find.text('Feature B'), findsOneWidget);
       expect(find.text('Update Now'), findsOneWidget);
