@@ -1,13 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider/path_provider.dart';
 import '../models/app_update_config.dart';
 import '../models/app_version.dart';
-import '../widgets/update_dialog.dart';
 
 /// Enumeration of all possible app update check states.
 enum AppUpdateStatus {
@@ -141,36 +137,15 @@ class AppUpdateService {
         return result;
       }
 
-      // Version evaluation logic:
-      // 1. If exact version strings match or installed build >= remote build, app is UP TO DATE.
-      final bool isExactStringMatch = config.latestVersion.rawVersion.isNotEmpty &&
-          currentVersion.rawVersion.isNotEmpty &&
-          config.latestVersion.rawVersion.trim() == currentVersion.rawVersion.trim();
-
-      final bool isUpdateAvailable;
-      if (isExactStringMatch) {
-        isUpdateAvailable = false;
-      } else if (config.latestVersion.buildNumber > 0 && currentVersion.buildNumber > 0) {
-        // Android versionCode is the authoritative upgrade metric
-        isUpdateAvailable = config.latestVersion.buildNumber > currentVersion.buildNumber;
-      } else {
-        // Fall back to SemVer comparison
-        isUpdateAvailable = currentVersion < config.latestVersion;
-      }
-
-      final bool isBelowMinBuild = config.minimumSupportedVersion.buildNumber > 0 &&
-          currentVersion.buildNumber < config.minimumSupportedVersion.buildNumber;
-      final bool isBelowMinSemver = currentVersion < config.minimumSupportedVersion;
-      final bool isMandatory = (isBelowMinBuild || isBelowMinSemver) ||
-          (config.forceUpdate && isUpdateAvailable);
-
+      // Version evaluation logic
       final AppUpdateStatus status;
-      if (!isUpdateAvailable) {
-        status = AppUpdateStatus.upToDate;
-      } else if (isMandatory) {
+      if (currentVersion < config.minimumSupportedVersion ||
+          (config.forceUpdate && currentVersion < config.latestVersion)) {
         status = AppUpdateStatus.mandatoryUpdateRequired;
-      } else {
+      } else if (currentVersion < config.latestVersion) {
         status = AppUpdateStatus.optionalUpdateAvailable;
+      } else {
+        status = AppUpdateStatus.upToDate;
       }
 
       final result = AppUpdateCheckResult(
@@ -180,7 +155,6 @@ class AppUpdateService {
       );
 
       _updateCache(result);
-      await _loadLocalPrefs();
       return result;
     } on TimeoutException {
       debugPrint('[AppUpdateService] Request timed out while fetching update configuration');
@@ -217,154 +191,6 @@ class AppUpdateService {
     _cachedResult = result;
     _lastFetchTime = DateTime.now();
     updateResultNotifier.value = result;
-  }
-
-  /// Session guard to ensure we prompt the doctor at most once per session.
-  static bool _hasPromptedOptionalDialog = false;
-
-  /// Guard to prevent duplicate stacked dialogs.
-  static bool _isDialogOpen = false;
-  static bool get isDialogOpen => _isDialogOpen;
-  static void setDialogOpen(bool open) => _isDialogOpen = open;
-
-  // Local storage for snooze and install tracking
-  static const String _prefsFileName = 'cliniqcare_update_prefs.json';
-  static Map<String, dynamic>? _localPrefsCache;
-
-  static Future<File?> _getPrefsFile() async {
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      return File('${dir.path}/$_prefsFileName');
-    } catch (_) {
-      return null;
-    }
-  }
-
-  static Future<void> _loadLocalPrefs() async {
-    if (_localPrefsCache != null) return;
-    try {
-      final file = await _getPrefsFile();
-      if (file != null && await file.exists()) {
-        final text = await file.readAsString();
-        _localPrefsCache = jsonDecode(text) as Map<String, dynamic>?;
-      }
-    } catch (e) {
-      debugPrint('[AppUpdateService] Failed to load local update prefs: $e');
-    }
-    _localPrefsCache ??= {};
-  }
-
-  static Future<void> _saveLocalPrefs() async {
-    try {
-      final file = await _getPrefsFile();
-      if (file != null && _localPrefsCache != null) {
-        await file.writeAsString(jsonEncode(_localPrefsCache));
-      }
-    } catch (e) {
-      debugPrint('[AppUpdateService] Failed to save local update prefs: $e');
-    }
-  }
-
-  /// Snoozes the current update for 24 hours when the user clicks 'Later'.
-  static Future<void> dismissUpdate(String version, int buildNumber) async {
-    await _loadLocalPrefs();
-    _localPrefsCache!['dismissedVersion'] = version;
-    _localPrefsCache!['dismissedBuild'] = buildNumber;
-    _localPrefsCache!['dismissedTimestamp'] = DateTime.now().millisecondsSinceEpoch;
-    await _saveLocalPrefs();
-    _hasPromptedOptionalDialog = true;
-  }
-
-  /// Checks if the user dismissed this version within the last 24 hours.
-  static bool isUpdateDismissed(String version, int buildNumber) {
-    if (_localPrefsCache == null) return false;
-    final dismissedVer = _localPrefsCache!['dismissedVersion'] as String?;
-    final dismissedBuild = _localPrefsCache!['dismissedBuild'] as int?;
-    final timestamp = _localPrefsCache!['dismissedTimestamp'] as int?;
-
-    if (dismissedVer == version && dismissedBuild == buildNumber && timestamp != null) {
-      final dismissedTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
-      if (DateTime.now().difference(dismissedTime).inHours < 24) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /// Marks that installation was initiated for a given version.
-  static Future<void> markInstallInitiated(String version, int buildNumber) async {
-    await _loadLocalPrefs();
-    _localPrefsCache!['installedVersion'] = version;
-    _localPrefsCache!['installedBuild'] = buildNumber;
-    _localPrefsCache!['installedTimestamp'] = DateTime.now().millisecondsSinceEpoch;
-    await _saveLocalPrefs();
-    _hasPromptedOptionalDialog = true;
-  }
-
-  /// Checks if installation was initiated recently (within 1 hour).
-  static bool isInstallPending(String version, int buildNumber) {
-    if (_localPrefsCache == null) return false;
-    final installedVer = _localPrefsCache!['installedVersion'] as String?;
-    final installedBuild = _localPrefsCache!['installedBuild'] as int?;
-    final timestamp = _localPrefsCache!['installedTimestamp'] as int?;
-
-    if (installedVer == version && installedBuild == buildNumber && timestamp != null) {
-      final installTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
-      if (DateTime.now().difference(installTime).inHours < 1) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /// Resets the prompted state for manual checks (e.g. from Profile or Settings).
-  static void resetPromptedState() {
-    _hasPromptedOptionalDialog = false;
-  }
-
-  /// Presents the optional update dialog if an update is available, not snoozed,
-  /// and not already displaying on screen.
-  static void showOptionalDialogIfAvailable(BuildContext? context) {
-    if (_hasPromptedOptionalDialog || _isDialogOpen) return;
-    final result = updateResultNotifier.value;
-    if (result == null ||
-        result.status != AppUpdateStatus.optionalUpdateAvailable ||
-        result.config == null) {
-      return;
-    }
-
-    if (context == null || !context.mounted) return;
-
-    final versionKey = result.config!.latestVersion.toString();
-    final buildNumber = result.config!.latestVersion.buildNumber;
-
-    // Check if snoozed by user in last 24h
-    if (isUpdateDismissed(versionKey, buildNumber)) {
-      debugPrint('[AppUpdateService] Update $versionKey is snoozed');
-      return;
-    }
-
-    // Check if user already launched installer within last hour
-    if (isInstallPending(versionKey, buildNumber)) {
-      debugPrint('[AppUpdateService] Installation was recently initiated for $versionKey');
-      return;
-    }
-
-    _hasPromptedOptionalDialog = true;
-    _isDialogOpen = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.mounted) {
-        OptionalUpdateDialog.show(
-          context,
-          currentVersion: result.currentVersion,
-          config: result.config!,
-        ).whenComplete(() {
-          _isDialogOpen = false;
-        });
-      } else {
-        _isDialogOpen = false;
-      }
-    });
   }
 
   /// Clears cache for manual retry.

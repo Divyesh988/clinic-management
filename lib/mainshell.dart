@@ -3,6 +3,7 @@ import 'package:clinic_mangement/doctor/dashboard.dart';
 import 'package:clinic_mangement/doctor/doctor_profile.dart';
 import 'package:clinic_mangement/doctor/patients.dart';
 import 'package:clinic_mangement/services/app_update_service.dart';
+import 'package:clinic_mangement/widgets/update_dialog.dart';
 import 'package:flutter/material.dart';
 
 import 'navigationbar.dart';
@@ -22,30 +23,30 @@ class MainShell extends StatefulWidget {
 typedef mainshell = MainShell;
 
 class _MainShellState extends State<MainShell> {
+  static bool _hasPromptedOptionalUpdateThisSession = false;
   late int _index;
 
   @override
   void initState() {
     super.initState();
     _index = widget.initialIndex.clamp(0, 4);
-    AppUpdateService.updateResultNotifier.addListener(_onUpdateResult);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        AppUpdateService.showOptionalDialogIfAvailable(context);
-      }
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkOptionalUpdate());
   }
 
-  void _onUpdateResult() {
-    if (mounted) {
-      AppUpdateService.showOptionalDialogIfAvailable(context);
+  void _checkOptionalUpdate() {
+    if (_hasPromptedOptionalUpdateThisSession) return;
+    final result = AppUpdateService.updateResultNotifier.value;
+    if (result != null &&
+        result.status == AppUpdateStatus.optionalUpdateAvailable &&
+        result.config != null &&
+        mounted) {
+      _hasPromptedOptionalUpdateThisSession = true;
+      OptionalUpdateDialog.show(
+        context,
+        currentVersion: result.currentVersion,
+        config: result.config!,
+      );
     }
-  }
-
-  @override
-  void dispose() {
-    AppUpdateService.updateResultNotifier.removeListener(_onUpdateResult);
-    super.dispose();
   }
 
   @override

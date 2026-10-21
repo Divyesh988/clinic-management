@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../mainshell.dart';
-import '../services/app_update_service.dart';
 import '../services/auth_service.dart';
 import '../services/clinic_service.dart';
 import '../services/setup_service.dart';
@@ -31,25 +30,7 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> {
   String? _errorMessage;
 
   @override
-  void initState() {
-    super.initState();
-    AppUpdateService.updateResultNotifier.addListener(_onUpdateResult);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        AppUpdateService.showOptionalDialogIfAvailable(context);
-      }
-    });
-  }
-
-  void _onUpdateResult() {
-    if (mounted) {
-      AppUpdateService.showOptionalDialogIfAvailable(context);
-    }
-  }
-
-  @override
   void dispose() {
-    AppUpdateService.updateResultNotifier.removeListener(_onUpdateResult);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
