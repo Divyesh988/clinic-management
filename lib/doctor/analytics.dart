@@ -6,14 +6,18 @@ import '../services/analytics_service.dart';
 import '../services/clinic_service.dart';
 import '../theme/app_colors.dart';
 
-class analytics extends StatefulWidget {
-  const analytics({super.key});
+class Analytics extends StatefulWidget {
+  const Analytics({super.key});
 
   @override
-  State<analytics> createState() => _analyticsState();
+  State<Analytics> createState() => _AnalyticsState();
 }
 
-class _analyticsState extends State<analytics> with SingleTickerProviderStateMixin {
+// Backwards compatibility alias
+// ignore: camel_case_types
+typedef analytics = Analytics;
+
+class _AnalyticsState extends State<Analytics> with SingleTickerProviderStateMixin {
   // ── Filters ─────────────────────────────────────
   DateRangePreset _preset = DateRangePreset.last30Days;
   DateTime? _customStart;

@@ -58,6 +58,12 @@ service cloud.firestore {
       allow write: if isMasterAdmin();
     }
 
+    match /app_config/{configId} {
+      // Mobile app reads update metadata on startup (including unauthenticated first launch)
+      allow read: if configId == 'updates_android_production';
+      allow write: if isMasterAdmin();
+    }
+
     match /features/{featureId} {
       allow read: if isAuthenticated();
       allow write: if isMasterAdmin();

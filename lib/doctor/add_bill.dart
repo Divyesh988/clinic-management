@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 
-class addbill extends StatefulWidget {
-  const addbill({super.key});
+class AddBill extends StatefulWidget {
+  const AddBill({super.key});
 
   @override
-  State<addbill> createState() => _addbillState();
+  State<AddBill> createState() => _AddBillState();
 }
 
-class _addbillState extends State<addbill> {
+class _AddBillState extends State<AddBill> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(child: Text("add")),
+    return const Scaffold(
+      body: Center(child: Text('Add Bill')),
     );
   }
 }
+
+// Backwards compatibility alias
+// ignore: camel_case_types
+typedef addbill = AddBill;

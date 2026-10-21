@@ -1,22 +1,67 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../services/app_update_service.dart';
 import '../services/auth_service.dart';
 import '../services/clinic_service.dart';
 import '../services/doctor_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/update_dialog.dart';
 import 'clinic_form_sheet.dart';
 import 'doctor_login_screen.dart';
 import 'predefined_medicines_screen.dart';
 
-class doctor_profile extends StatefulWidget {
-  const doctor_profile({super.key});
+class DoctorProfile extends StatefulWidget {
+  const DoctorProfile({super.key});
 
   @override
-  State<doctor_profile> createState() => _doctor_profileState();
+  State<DoctorProfile> createState() => _DoctorProfileState();
 }
 
-class _doctor_profileState extends State<doctor_profile> {
+// Backwards compatibility alias
+// ignore: camel_case_types
+typedef doctor_profile = DoctorProfile;
+
+class _DoctorProfileState extends State<DoctorProfile> {
   bool _isLoading = false;
+  bool _isCheckingUpdate = false;
+
+  Future<void> _checkForAppUpdates() async {
+    if (_isCheckingUpdate) return;
+    setState(() => _isCheckingUpdate = true);
+    try {
+      final result = await AppUpdateService.checkForUpdates(forceRefresh: true);
+      if (!mounted) return;
+      if (result.status == AppUpdateStatus.optionalUpdateAvailable && result.config != null) {
+        OptionalUpdateDialog.show(
+          context,
+          currentVersion: result.currentVersion,
+          config: result.config!,
+        );
+      } else if (result.status == AppUpdateStatus.mandatoryUpdateRequired && result.config != null) {
+        // Automatically handled by the root builder stack
+      } else if (result.status == AppUpdateStatus.upToDate) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('CliniqCare is up to date (v${result.currentVersion.displayString})'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.errorMessage ?? 'Unable to complete update check.'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCheckingUpdate = false);
+      }
+    }
+  }
 
   Map<String, dynamic> _profileData = {
     'name': 'Dr. Practitioner',
@@ -1283,6 +1328,46 @@ class _doctor_profileState extends State<doctor_profile> {
             ],
           ),
           const SizedBox(height: 14),
+          const Divider(height: 1),
+          const SizedBox(height: 12),
+          // App Updates Section
+          Row(
+            children: [
+              const Icon(Icons.system_update_rounded, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'CliniqCare Mobile',
+                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                    ),
+                    Text(
+                      'Version 1.0.0 (build 1)',
+                      style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton.icon(
+                onPressed: _isCheckingUpdate ? null : _checkForAppUpdates,
+                icon: _isCheckingUpdate
+                    ? const SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 14),
+                label: const Text('Check Updates', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           const Divider(height: 1),
           const SizedBox(height: 14),
           OutlinedButton.icon(

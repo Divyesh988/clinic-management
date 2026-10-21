@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'theme/app_colors.dart';
 
-class navigationbar extends StatelessWidget {
-  const navigationbar({
+class AppNavigationBar extends StatelessWidget {
+  const AppNavigationBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
@@ -101,3 +101,8 @@ class navigationbar extends StatelessWidget {
     );
   }
 }
+
+// Backwards compatibility alias
+// ignore: camel_case_types
+typedef navigationbar = AppNavigationBar;
+

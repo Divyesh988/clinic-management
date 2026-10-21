@@ -7,19 +7,23 @@ import '../theme/app_colors.dart';
 import 'add_patient_screen.dart';
 import 'predefined_medicines_screen.dart';
 
-class dashboard extends StatefulWidget {
+class Dashboard extends StatefulWidget {
   final ValueChanged<int>? onNavigateTab;
 
-  const dashboard({
+  const Dashboard({
     super.key,
     this.onNavigateTab,
   });
 
   @override
-  State<dashboard> createState() => _dashboardState();
+  State<Dashboard> createState() => _DashboardState();
 }
 
-class _dashboardState extends State<dashboard> {
+// Backwards compatibility alias
+// ignore: camel_case_types
+typedef dashboard = Dashboard;
+
+class _DashboardState extends State<Dashboard> {
   String? _selectedClinicId;
 
   // ────────────────────────────────────────────────────────────────

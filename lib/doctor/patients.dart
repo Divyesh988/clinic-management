@@ -10,14 +10,18 @@ import 'clinic_form_sheet.dart';
 import 'patient_ehr_screen.dart';
 import '../services/ehr_service.dart';
 
-class patients extends StatefulWidget {
-  const patients({super.key});
+class Patients extends StatefulWidget {
+  const Patients({super.key});
 
   @override
-  State<patients> createState() => _patientsState();
+  State<Patients> createState() => _PatientsState();
 }
 
-class _patientsState extends State<patients> {
+// Backwards compatibility alias
+// ignore: camel_case_types
+typedef patients = Patients;
+
+class _PatientsState extends State<Patients> {
   final TextEditingController _searchController = TextEditingController();
   int _selectedFilterIndex = 0;
   String _searchQuery = '';

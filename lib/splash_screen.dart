@@ -6,9 +6,12 @@ import 'doctor/change_password_screen.dart';
 import 'doctor/doctor_login_screen.dart';
 import 'doctor/setup_wizard_screen.dart';
 import 'mainshell.dart';
+import 'models/app_version.dart';
+import 'services/app_update_service.dart';
 import 'services/auth_service.dart';
 import 'services/clinic_service.dart';
 import 'services/setup_service.dart';
+import 'services/shorebird_update_service.dart';
 import 'theme/app_colors.dart';
 
 /// Doctor Practice Management Splash Screen
@@ -85,6 +88,22 @@ class _SplashScreenState extends State<SplashScreen>
 
     _entranceController.forward();
     _progressController.forward();
+
+    // Asynchronously check for application updates and OTA patches in background
+    AppUpdateService.checkForUpdates().catchError((e) {
+      debugPrint('[SplashScreen] Update check error: $e');
+      return const AppUpdateCheckResult(
+        status: AppUpdateStatus.networkError,
+        currentVersion: AppVersion(major: 1, minor: 0, patch: 0, buildNumber: 1, rawVersion: '1.0.0+1'),
+      );
+    });
+    ShorebirdUpdateService.checkForPatch().then((hasPatch) {
+      if (hasPatch) {
+        ShorebirdUpdateService.downloadPatch();
+      }
+    }).catchError((e) {
+      debugPrint('[SplashScreen] Shorebird patch check error: $e');
+    });
 
     // Rotate status messages smoothly
     _statusTimer = Timer.periodic(const Duration(milliseconds: 550), (timer) {

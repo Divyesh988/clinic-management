@@ -1,0 +1,212 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isMasterAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'master_admin' ||
+        request.auth.token.role == 'MASTER_ADMIN' ||
+        exists(/databases/$(database)/documents/adminUsers/$(request.auth.uid))
+      );
+    }
+
+    function isDistributor(distributorUid) {
+      return isAuthenticated() && (
+        request.auth.uid == distributorUid ||
+        request.auth.token.role == 'distributor_admin' ||
+        request.auth.token.role == 'DISTRIBUTOR_ADMIN'
+      );
+    }
+
+    function isDoctor(doctorUid) {
+      return isAuthenticated() && request.auth.uid == doctorUid;
+    }
+
+    function isDoctorActive(doctorUid) {
+      return isDoctor(doctorUid) &&
+        exists(/databases/$(database)/documents/doctors/$(doctorUid)) &&
+        get(/databases/$(database)/documents/doctors/$(doctorUid)).data.accountStatus in ['active', 'ACTIVE'] &&
+        (
+          !exists(/databases/$(database)/documents/customers/$(doctorUid)) ||
+          get(/databases/$(database)/documents/customers/$(doctorUid)).data.accountStatus in ['active', 'ACTIVE']
+        );
+    }
+
+    match /adminUsers/{adminUid} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == adminUid;
+      allow update, delete: if isMasterAdmin();
+    }
+
+    match /distributors/{distributorUid} {
+      allow read: if isMasterAdmin() || isDistributor(distributorUid);
+      allow create: if isAuthenticated() && (request.auth.uid == distributorUid || isMasterAdmin());
+      allow update: if isMasterAdmin() || (
+        isDistributor(distributorUid) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'commissionRate', 'uid'])
+      );
+      allow delete: if isMasterAdmin();
+    }
+
+    match /plans/{planId} {
+      allow read: if true;
+      allow write: if isMasterAdmin();
+    }
+
+    match /app_config/{configId} {
+      // Mobile app reads update metadata on startup (including unauthenticated first launch)
+      allow read: if configId == 'updates_android_production';
+      allow write: if isMasterAdmin();
+    }
+
+    match /features/{featureId} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin();
+    }
+
+    match /customerRequests/{requestId} {
+      allow read: if isMasterAdmin() || (
+        isAuthenticated() && resource.data.distributorUid == request.auth.uid
+      );
+      allow create: if isMasterAdmin() || (
+        isAuthenticated() &&
+        request.resource.data.distributorUid == request.auth.uid &&
+        request.resource.data.status in ['PENDING_REVIEW', 'PENDING'] &&
+        (!('provisioningStatus' in request.resource.data) || request.resource.data.provisioningStatus == 'NOT_STARTED')
+      );
+      allow update: if isMasterAdmin() || (
+        isAuthenticated() &&
+        resource.data.distributorUid == request.auth.uid &&
+        resource.data.status in ['PENDING_REVIEW', 'PENDING', 'NEEDS_INFORMATION'] &&
+        request.resource.data.status == 'CANCELLED' &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'distributorUid', 'planId', 'doctorName', 'email', 'reviewedBy', 'reviewedAt', 'provisionedDoctorUid', 'provisioningStatus'
+        ])
+      );
+      allow delete: if isMasterAdmin();
+    }
+
+    match /customers/{customerUid} {
+      allow read: if isMasterAdmin() || 
+        (isAuthenticated() && resource.data.distributorUid == request.auth.uid) ||
+        isDoctor(customerUid);
+      allow write: if isMasterAdmin();
+    }
+
+    match /subscriptions/{subscriptionId} {
+      allow read: if isMasterAdmin() ||
+        (isAuthenticated() && resource.data.distributorUid == request.auth.uid) ||
+        (isAuthenticated() && resource.data.doctorUid == request.auth.uid);
+      allow write: if isMasterAdmin();
+    }
+
+    match /sales/{saleId} {
+      allow read: if isMasterAdmin() ||
+        (isAuthenticated() && resource.data.distributorUid == request.auth.uid);
+      allow write: if isMasterAdmin();
+    }
+
+    match /notifications/{notifId} {
+      allow read: if isMasterAdmin() || (
+        isAuthenticated() && resource.data.recipientUid == request.auth.uid
+      ) || (
+        isMasterAdmin() && resource.data.recipientRole in ['master_admin', 'all_admins']
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.recipientUid == request.auth.uid ||
+        (isMasterAdmin() && resource.data.recipientRole in ['master_admin', 'all_admins'])
+      );
+      allow delete: if isMasterAdmin();
+    }
+
+    match /auditLogs/{logId} {
+      allow read: if isMasterAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    match /doctors/{doctorUid} {
+      allow read: if isMasterAdmin() || isDoctor(doctorUid) || (
+        isAuthenticated() && resource.data.uid == request.auth.uid
+      );
+      // Doctors can only update their profile if active and cannot change privileged SaaS/status fields
+      allow write: if isMasterAdmin() || (
+        isDoctorActive(doctorUid) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'accountStatus', 'distributorUid', 'activePlanId', 'subscriptionStatus', 'uid', 'createdAt'
+        ])
+      );
+    }
+
+    match /doctor_profile/{profileId} {
+      allow read: if isMasterAdmin() || isDoctor(profileId) || profileId == 'main';
+      allow write: if isMasterAdmin() || (profileId == 'main') || isDoctorActive(profileId);
+    }
+
+    match /clinics/{clinicId} {
+      allow read: if isMasterAdmin() || (
+        isAuthenticated() && (resource.data.doctorId == null || isDoctorActive(resource.data.doctorId))
+      );
+      allow create: if isMasterAdmin() || (
+        isAuthenticated() && isDoctorActive(request.resource.data.doctorId)
+      ) || (
+        isAuthenticated() && (
+          request.auth.token.role in ['distributor_admin', 'DISTRIBUTOR_ADMIN'] ||
+          exists(/databases/$(database)/documents/distributors/$(request.auth.uid))
+        )
+      );
+      allow update, delete: if isMasterAdmin() || (
+        isAuthenticated() && isDoctorActive(resource.data.doctorId)
+      );
+    }
+
+    match /predefined_medicines/{medicineId} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin() || (
+        isAuthenticated() && isDoctorActive(request.auth.uid)
+      );
+    }
+
+    match /medicines/{medicineId} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin() || (
+        isAuthenticated() && isDoctorActive(request.auth.uid)
+      );
+    }
+
+    match /patients/{patientId} {
+      allow read: if isMasterAdmin() || (
+        isAuthenticated() && (resource.data.doctorId == null || isDoctorActive(resource.data.doctorId))
+      );
+      allow create: if isMasterAdmin() || (
+        isAuthenticated() &&
+        isDoctorActive(request.resource.data.doctorId) &&
+        request.resource.data.clinicId != null
+      );
+      allow update, delete: if isMasterAdmin() || (
+        isAuthenticated() && isDoctorActive(resource.data.doctorId)
+      );
+    }
+
+    match /visits/{visitId} {
+      allow read: if isMasterAdmin() || (
+        isAuthenticated() && (resource.data.doctorId == null || isDoctorActive(resource.data.doctorId))
+      );
+      allow create: if isMasterAdmin() || (
+        isAuthenticated() &&
+        isDoctorActive(request.resource.data.doctorId) &&
+        request.resource.data.patientId != null &&
+        request.resource.data.clinicId != null
+      );
+      allow update, delete: if isMasterAdmin() || (
+        isAuthenticated() && isDoctorActive(resource.data.doctorId)
+      );
+    }
+  }
+}

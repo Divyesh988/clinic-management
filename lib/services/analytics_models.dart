@@ -1,5 +1,6 @@
 /// Analytics data models for the Clinic Management System.
 /// These models are computed from real Firestore data — patients/{patientId}.
+library;
 
 /// Available date range presets for analytics filtering.
 enum DateRangePreset {

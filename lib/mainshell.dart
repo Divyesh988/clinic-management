@@ -2,32 +2,55 @@ import 'package:clinic_mangement/doctor/analytics.dart';
 import 'package:clinic_mangement/doctor/dashboard.dart';
 import 'package:clinic_mangement/doctor/doctor_profile.dart';
 import 'package:clinic_mangement/doctor/patients.dart';
+import 'package:clinic_mangement/services/app_update_service.dart';
+import 'package:clinic_mangement/widgets/update_dialog.dart';
 import 'package:flutter/material.dart';
 
 import 'navigationbar.dart';
 
-class mainshell extends StatefulWidget {
-  const mainshell({super.key,
+class MainShell extends StatefulWidget {
+  const MainShell({super.key,
     this.initialIndex = 0,
   });
 
   final int initialIndex;
   @override
-  State<mainshell> createState() => _mainshellState();
+  State<MainShell> createState() => _MainShellState();
 }
 
-class _mainshellState extends State<mainshell> {
+// Backwards compatibility alias
+// ignore: camel_case_types
+typedef mainshell = MainShell;
 
+class _MainShellState extends State<MainShell> {
+  static bool _hasPromptedOptionalUpdateThisSession = false;
   late int _index;
 
   @override
   void initState() {
     super.initState();
     _index = widget.initialIndex.clamp(0, 4);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkOptionalUpdate());
+  }
+
+  void _checkOptionalUpdate() {
+    if (_hasPromptedOptionalUpdateThisSession) return;
+    final result = AppUpdateService.updateResultNotifier.value;
+    if (result != null &&
+        result.status == AppUpdateStatus.optionalUpdateAvailable &&
+        result.config != null &&
+        mounted) {
+      _hasPromptedOptionalUpdateThisSession = true;
+      OptionalUpdateDialog.show(
+        context,
+        currentVersion: result.currentVersion,
+        config: result.config!,
+      );
+    }
   }
 
   @override
-  void didUpdateWidget(mainshell oldWidget) {
+  void didUpdateWidget(MainShell oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialIndex != widget.initialIndex) {
       _index = widget.initialIndex.clamp(0, 4);
@@ -41,13 +64,13 @@ class _mainshellState extends State<mainshell> {
       body: IndexedStack(
         index: _index,
         children: [
-          dashboard(onNavigateTab: (i) => setState(() => _index = i)),
-          const patients(),
-          const analytics(),
-          const doctor_profile(),
+          Dashboard(onNavigateTab: (i) => setState(() => _index = i)),
+          const Patients(),
+          const Analytics(),
+          const DoctorProfile(),
         ],
       ),
-      bottomNavigationBar: navigationbar(
+      bottomNavigationBar: AppNavigationBar(
         currentIndex: _index,
         onTap: (i) => setState(() => _index = i),
       ),
