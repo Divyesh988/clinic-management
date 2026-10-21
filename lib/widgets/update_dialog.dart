@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/app_update_config.dart';
 import '../models/app_version.dart';
 import '../services/apk_update_service.dart';
+import '../services/app_update_service.dart';
 import '../theme/app_colors.dart';
 import 'app_logo.dart';
 
@@ -43,6 +44,26 @@ class _OptionalUpdateDialogState extends State<OptionalUpdateDialog> {
   String? _statusMessage;
   File? _downloadedFile;
 
+  @override
+  void initState() {
+    super.initState();
+    AppUpdateService.setDialogOpen(true);
+  }
+
+  @override
+  void dispose() {
+    AppUpdateService.setDialogOpen(false);
+    super.dispose();
+  }
+
+  void _onDismiss() {
+    AppUpdateService.dismissUpdate(
+      widget.config.latestVersion.toString(),
+      widget.config.latestVersion.buildNumber,
+    );
+    Navigator.of(context).pop();
+  }
+
   Future<void> _startDownloadAndInstall() async {
     if (widget.config.apkDownloadUrl.isEmpty) {
       _openReleasePage();
@@ -81,6 +102,12 @@ class _OptionalUpdateDialogState extends State<OptionalUpdateDialog> {
         _downloadedFile = file;
         _statusMessage = 'Download complete! Launching package installer...';
       });
+
+      // Mark installation initiated to prevent re-prompting while installer is running
+      await AppUpdateService.markInstallInitiated(
+        widget.config.latestVersion.toString(),
+        widget.config.latestVersion.buildNumber,
+      );
 
       await ApkUpdateService.installApk(file);
     } catch (e) {
@@ -216,7 +243,7 @@ class _OptionalUpdateDialogState extends State<OptionalUpdateDialog> {
                     ),
                     if (!_isDownloading)
                       IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: _onDismiss,
                         icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
@@ -331,7 +358,7 @@ class _OptionalUpdateDialogState extends State<OptionalUpdateDialog> {
                 Row(
                   children: [
                     TextButton(
-                      onPressed: _isDownloading ? null : () => Navigator.of(context).pop(),
+                      onPressed: _isDownloading ? null : _onDismiss,
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.textSecondary,
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
