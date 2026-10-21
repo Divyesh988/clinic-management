@@ -93,8 +93,11 @@ service cloud.firestore {
 
     match /customers/{customerUid} {
       allow read: if isMasterAdmin() || 
-        (isAuthenticated() && resource.data.distributorUid == request.auth.uid) ||
-        isDoctor(customerUid);
+        (isAuthenticated() && (
+          resource.data.distributorUid == request.auth.uid ||
+          resource.data.doctorUid == request.auth.uid ||
+          customerUid == request.auth.uid
+        ));
       allow write: if isMasterAdmin();
     }
 
@@ -145,67 +148,51 @@ service cloud.firestore {
     }
 
     match /doctor_profile/{profileId} {
-      allow read: if isMasterAdmin() || isDoctor(profileId) || profileId == 'main';
-      allow write: if isMasterAdmin() || (profileId == 'main') || isDoctorActive(profileId);
+      allow read: if isMasterAdmin() || isDoctor(profileId) || profileId == 'main' || isAuthenticated();
+      allow write: if isMasterAdmin() || (profileId == 'main') || isDoctor(profileId);
     }
 
     match /clinics/{clinicId} {
-      allow read: if isMasterAdmin() || (
-        isAuthenticated() && (resource.data.doctorId == null || isDoctorActive(resource.data.doctorId))
-      );
-      allow create: if isMasterAdmin() || (
-        isAuthenticated() && isDoctorActive(request.resource.data.doctorId)
-      ) || (
-        isAuthenticated() && (
-          request.auth.token.role in ['distributor_admin', 'DISTRIBUTOR_ADMIN'] ||
-          exists(/databases/$(database)/documents/distributors/$(request.auth.uid))
-        )
-      );
+      allow read: if isMasterAdmin() || isAuthenticated();
+      allow create: if isMasterAdmin() || isAuthenticated();
       allow update, delete: if isMasterAdmin() || (
-        isAuthenticated() && isDoctorActive(resource.data.doctorId)
+        isAuthenticated() &&
+        (resource.data.doctorId == null || resource.data.doctorId == request.auth.uid)
       );
     }
 
     match /predefined_medicines/{medicineId} {
       allow read: if isAuthenticated();
-      allow write: if isMasterAdmin() || (
-        isAuthenticated() && isDoctorActive(request.auth.uid)
-      );
+      allow write: if isMasterAdmin() || isAuthenticated();
     }
 
     match /medicines/{medicineId} {
       allow read: if isAuthenticated();
-      allow write: if isMasterAdmin() || (
-        isAuthenticated() && isDoctorActive(request.auth.uid)
-      );
+      allow write: if isMasterAdmin() || isAuthenticated();
     }
 
     match /patients/{patientId} {
-      allow read: if isMasterAdmin() || (
-        isAuthenticated() && (resource.data.doctorId == null || isDoctorActive(resource.data.doctorId))
-      );
+      allow read: if isMasterAdmin() || isAuthenticated();
       allow create: if isMasterAdmin() || (
         isAuthenticated() &&
-        isDoctorActive(request.resource.data.doctorId) &&
-        request.resource.data.clinicId != null
+        (request.resource.data.doctorId == null || request.resource.data.doctorId == request.auth.uid)
       );
       allow update, delete: if isMasterAdmin() || (
-        isAuthenticated() && isDoctorActive(resource.data.doctorId)
+        isAuthenticated() &&
+        (resource.data.doctorId == null || resource.data.doctorId == request.auth.uid)
       );
     }
 
     match /visits/{visitId} {
-      allow read: if isMasterAdmin() || (
-        isAuthenticated() && (resource.data.doctorId == null || isDoctorActive(resource.data.doctorId))
-      );
+      allow read: if isMasterAdmin() || isAuthenticated();
       allow create: if isMasterAdmin() || (
         isAuthenticated() &&
-        isDoctorActive(request.resource.data.doctorId) &&
-        request.resource.data.patientId != null &&
-        request.resource.data.clinicId != null
+        (request.resource.data.doctorId == null || request.resource.data.doctorId == request.auth.uid) &&
+        request.resource.data.patientId != null
       );
       allow update, delete: if isMasterAdmin() || (
-        isAuthenticated() && isDoctorActive(resource.data.doctorId)
+        isAuthenticated() &&
+        (resource.data.doctorId == null || resource.data.doctorId == request.auth.uid)
       );
     }
   }
