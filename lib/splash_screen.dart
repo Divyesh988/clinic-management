@@ -36,7 +36,6 @@ class _SplashScreenState extends State<SplashScreen>
   Timer? _statusTimer;
   int _currentStepIndex = 0;
   bool _hasNavigated = false;
-  String _installedVersionText = 'v1.0.0';
 
   final List<String> _loadingSteps = [
     'Initializing clinical workspace...',
@@ -49,16 +48,6 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-
-    // Dynamically retrieve the installed APK version
-    AppUpdateService.getInstalledVersion().then((version) {
-      if (mounted) {
-        setState(() {
-          _installedVersionText =
-              'v${version.major}.${version.minor}.${version.patch}${version.buildNumber > 0 ? '+${version.buildNumber}' : ''}';
-        });
-      }
-    });
 
     // 1. Entrance animation (Logo + Title fade & slight scale)
     _entranceController = AnimationController(
@@ -679,7 +668,7 @@ class _SplashScreenState extends State<SplashScreen>
         ),
         const SizedBox(height: 4),
         Text(
-          _installedVersionText,
+          'v1.0.0',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 9.5,
