@@ -668,7 +668,7 @@ class _SplashScreenState extends State<SplashScreen>
         ),
         const SizedBox(height: 4),
         Text(
-          'v1.0.0 (Production Release)',
+          'v1.0.0',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 9.5,
