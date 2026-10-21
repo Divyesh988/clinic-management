@@ -24,6 +24,7 @@ typedef doctor_profile = DoctorProfile;
 class _DoctorProfileState extends State<DoctorProfile> {
   bool _isLoading = false;
   bool _isCheckingUpdate = false;
+  String _installedAppVersion = 'Version 1.0.0';
 
   Future<void> _checkForAppUpdates() async {
     if (_isCheckingUpdate) return;
@@ -31,6 +32,10 @@ class _DoctorProfileState extends State<DoctorProfile> {
     try {
       final result = await AppUpdateService.checkForUpdates(forceRefresh: true);
       if (!mounted) return;
+      setState(() {
+        _installedAppVersion =
+            'Version ${result.currentVersion.major}.${result.currentVersion.minor}.${result.currentVersion.patch}${result.currentVersion.buildNumber > 0 ? ' (build ${result.currentVersion.buildNumber})' : ''}';
+      });
       if (result.status == AppUpdateStatus.optionalUpdateAvailable && result.config != null) {
         OptionalUpdateDialog.show(
           context,
@@ -82,6 +87,15 @@ class _DoctorProfileState extends State<DoctorProfile> {
   void initState() {
     super.initState();
     _fetchDoctorProfile();
+
+    AppUpdateService.getInstalledVersion().then((version) {
+      if (mounted) {
+        setState(() {
+          _installedAppVersion =
+              'Version ${version.major}.${version.minor}.${version.patch}${version.buildNumber > 0 ? ' (build ${version.buildNumber})' : ''}';
+        });
+      }
+    });
   }
 
   Future<void> _fetchDoctorProfile() async {
@@ -1335,17 +1349,17 @@ class _DoctorProfileState extends State<DoctorProfile> {
             children: [
               const Icon(Icons.system_update_rounded, size: 18, color: AppColors.primary),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'CliniqCare Mobile',
                       style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                     ),
                     Text(
-                      'Version 1.0.0 (build 1)',
-                      style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      _installedAppVersion,
+                      style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
                     ),
                   ],
                 ),

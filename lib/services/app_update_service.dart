@@ -58,6 +58,10 @@ class AppUpdateService {
 
   @visibleForTesting
   static AppVersion? installedVersionOverride;
+  static AppVersion? _cachedInstalledVersion;
+
+  /// Synchronously returns cached installed version if already retrieved.
+  static AppVersion? get currentInstalledVersion => _cachedInstalledVersion;
 
   /// Global notifier of the latest update check result.
   static final ValueNotifier<AppUpdateCheckResult?> updateResultNotifier =
@@ -68,10 +72,15 @@ class AppUpdateService {
     if (installedVersionOverride != null) {
       return installedVersionOverride!;
     }
+    if (_cachedInstalledVersion != null) {
+      return _cachedInstalledVersion!;
+    }
     try {
       final info = await PackageInfo.fromPlatform();
       final build = int.tryParse(info.buildNumber) ?? 0;
-      return AppVersion.parse(info.version, build);
+      final version = AppVersion.parse(info.version, build);
+      _cachedInstalledVersion = version;
+      return version;
     } catch (e) {
       debugPrint('[AppUpdateService] Failed to retrieve PackageInfo: $e');
       return const AppVersion(major: 1, minor: 0, patch: 0, buildNumber: 1, rawVersion: '1.0.0+1');
